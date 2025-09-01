@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+ <script>
+    // Authentication check
+    if (localStorage.getItem('flextrack_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+    
+    function logout() {
+      localStorage.removeItem('flextrack_logged_in');
+      localStorage.removeItem('flextrack_user_email');
+      window.location.href = 'login.html';
+    }
+  </script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlexTracker — Expense Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --brand: #4f46e5;
+      /* indigo-600 */
+      --brand-2: #22c55e;
+      /* green-500 */
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="#"><i class="bi bi-wallet2 me-2 text-primary"></i>Flex<b>Tracker</b></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link active" data-section="dashboard" href="#">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" data-section="transactions" href="#">Transactions</a></li>
+          <li class="nav-item"><a class="nav-link" data-section="wallets" href="#">Wallets</a></li>
+          <li class="nav-item"><a class="nav-link" data-section="travel" href="#">Travel</a></li>
+          <li class="nav-item"><a class="nav-link" data-section="business" href="#">Business</a></li>
+          <li class="nav-item"><a class="nav-link" data-section="pocketguard" href="#">PocketGuard</a></li>
+          <li class="nav-item"><a class="nav-link" data-section="settings" href="#">Settings</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#txModal"><i
+              class="bi bi-plus-lg me-1"></i> Add Transaction</button>
+          <button class="btn btn-outline-secondary" id="connectBankBtn"><i class="bi bi-bank me-1"></i> Connect
+            Bank</button>
+          <button class="btn btn-outline-danger ms-2" id="logoutBtn"><i class="bi bi-box-arrow-right me-1"></i>
+            Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-4">
+    <!-- DASHBOARD -->
+    <section id="section-dashboard" class="section">
+      <div class="row g-4">
+        <div class="col-12 col-lg-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="card-title m-0">Net Worth</h5>
+                <span class="chip" id="baseCurrencyChip">Base: <span id="baseCurrencyLabel">NGN</span></span>
+              </div>
+              <h2 class="fw-bold" id="netWorth">—</h2>
+              <div class="text-muted small">All wallets converted to base currency.</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">This Month</h5>
+              <div class="d-flex justify-content-between">
+                <div>
+                  <div class="text-muted">Income</div>
+                  <div class="fs-4 fw-bold" id="mIncome">—</div>
+                </div>
+                <div>
+                  <div class="text-muted">Expenses</div>
+                  <div class="fs-4 fw-bold" id="mExpenses">—</div>
+                </div>
+                <div>
+                  <div class="text-muted">Savings</div>
+                  <div class="fs-4 fw-bold" id="mSavings">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">In My Pocket</h5>
+              <div class="fs-2 fw-bold" id="inMyPocket">—</div>
+              <div class="text-muted small">Income − (Bills + Savings + Goals + Subscriptions + Planned).</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-xl-6">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Spending by Category</h5>
+                <span class="small text-muted" id="chartMonthLabel"></span>
+              </div>
+              <canvas id="catPie"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-xl-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Cashflow Trend</h5>
+              <canvas id="trendLine"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section id="section-transactions" class="section d-none">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-3">
+              <label class="form-label">Search</label>
+              <input type="text" id="txSearch" class="form-control" placeholder="Description, tag, category...">
+            </div>
+            <div class="col-sm-3">
+              <label class="form-label">Type</label>
+              <select id="txTypeFilter" class="form-select">
+                <option value="">All</option>
+                <option>expense</option>
+                <option>income</option>
+                <option>transfer</option>
+              </select>
+            </div>
+            <div class="col-sm-3">
+              <label class="form-label">Wallet</label>
+              <select id="txWalletFilter" class="form-select"></select>
+            </div>
+            <div class="col-sm-3 text-sm-end">
+              <button class="btn btn-outline-secondary me-2" id="exportCsvBtn"><i class="bi bi-download me-1"></i>Export
+                CSV</button>
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#txModal"><i
+                  class="bi bi-plus-lg me-1"></i>Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="txTable">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Wallet</th>
+                <th class="text-end">Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="card-body sticky-actions d-flex justify-content-between">
+          <div class="small text-muted" id="txCount">0 transactions</div>
+          <div>
+            <button class="btn btn-outline-danger btn-sm" id="clearAllBtn"><i class="bi bi-trash3 me-1"></i>Clear
+              All</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WALLETS -->
+    <section id="section-wallets" class="section d-none">
+      <div class="row g-4" id="walletsGrid"></div>
+      <div class="mt-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#walletModal"><i
+            class="bi bi-plus-lg me-1"></i>New Wallet</button>
+      </div>
+    </section>
+
+    <!-- TRAVEL -->
+    <section id="section-travel" class="section d-none">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="card-title m-0">Trips</h5>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#tripModal"><i
+                    class="bi bi-plus-lg me-1"></i>Add Trip</button>
+              </div>
+              <div id="tripList" class="vstack gap-3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Flex Wallet (FX)</h5>
+              <p class="text-muted small">Store and track balances in foreign currencies (USD, GBP, EUR). Configure
+                rates in <b>Settings → Exchange Rates</b>.</p>
+              <div id="fxBalances" class="vstack gap-2"></div>
+              <hr>
+              <form id="fxAddForm" class="row g-2">
+                <div class="col-5">
+                  <select class="form-select" id="fxCurrency">
+                    <option>USD</option>
+                    <option>GBP</option>
+                    <option>EUR</option>
+                  </select>
+                </div>
+                <div class="col-7 d-flex gap-2">
+                  <input type="number" step="0.01" class="form-control" placeholder="Amount" id="fxAmount">
+                  <button class="btn btn-primary" type="submit">Add</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUSINESS -->
+    <section id="section-business" class="section d-none">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="card-title m-0">Reports</h5>
+                <button class="btn btn-sm btn-outline-primary" id="exportBusinessCsv"><i
+                    class="bi bi-download me-1"></i>Export</button>
+              </div>
+              <p class="text-muted small">"Expensify for business" style categories: Reimbursable, Billable, Client,
+                Project.</p>
+              <div class="table-responsive">
+                <table class="table" id="bizTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Date</th>
+                      <th>Merchant</th>
+                      <th>Category</th>
+                      <th>Client/Project</th>
+                      <th class="text-end">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Receipt Capture</h5>
+              <p class="text-muted small">Upload a receipt image/PDF to attach to a transaction.</p>
+              <div class="mb-2">
+                <input class="form-control" type="file" id="receiptFile" accept="image/*,.pdf">
+              </div>
+              <div id="receiptPreview" class="border rounded p-3 text-muted">No file selected.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POCKETGUARD -->
+    <section id="section-pocketguard" class="section d-none">
+      <div class="row g-4">
+        <div class="col-xl-5">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Monthly Plan</h5>
+              <form id="pgForm" class="vstack gap-3">
+                <div class="row g-2">
+                  <div class="col-6"><label class="form-label">Income</label><input type="number" class="form-control"
+                      id="pgIncome" step="0.01"></div>
+                  <div class="col-6"><label class="form-label">Savings</label><input type="number" class="form-control"
+                      id="pgSavings" step="0.01"></div>
+                </div>
+                <div class="row g-2">
+                  <div class="col-6"><label class="form-label">Bills</label><input type="number" class="form-control"
+                      id="pgBills" step="0.01"></div>
+                  <div class="col-6"><label class="form-label">Subscriptions</label><input type="number"
+                      class="form-control" id="pgSubs" step="0.01"></div>
+                </div>
+                <div class="row g-2">
+                  <div class="col-6"><label class="form-label">Goals</label><input type="number" class="form-control"
+                      id="pgGoals" step="0.01"></div>
+                  <div class="col-6"><label class="form-label">Planned</label><input type="number" class="form-control"
+                      id="pgPlanned" step="0.01"></div>
+                </div>
+                <button class="btn btn-primary" type="submit">Update</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-7">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Disposable Income</h5>
+              <div class="display-5 fw-bold" id="pgResult">—</div>
+              <div class="text-muted">Automatically shown on Dashboard as "In My Pocket".</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="section-settings" class="section d-none">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Appearance</h5>
+              <p class="text-muted small">Choose between light and dark mode.</p>
+              <div class="d-flex align-items-center">
+                <span class="me-2"><i class="bi bi-sun"></i> Light</span>
+                <label class="theme-switch mx-2">
+                  <input type="checkbox" id="darkModeToggle">
+                  <span class="slider"></span>
+                  <span class="slider-icon sun"><i class="bi bi-sun"></i></span>
+                  <span class="slider-icon moon"><i class="bi bi-moon"></i></span>
+                </label>
+                <span class="ms-2"><i class="bi bi-moon"></i> Dark</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Base Currency</h5>
+              <p class="text-muted small">Choose the currency used for totals and reporting.</p>
+              <select id="baseCurrency" class="form-select" style="max-width:200px">
+                <option>NGN</option>
+                <option>USD</option>
+                <option>GBP</option>
+                <option>EUR</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Exchange Rates</h5>
+              <p class="text-muted small">Manual rates (1 unit of foreign buys how many <b>base</b> units).</p>
+              <div class="d-flex gap-3 align-items-end flex-wrap">
+                <div>
+                  <label class="form-label">USD → Base</label>
+                  <input id="rateUSD" type="number" step="0.0001" class="form-control rate-input"
+                    placeholder="e.g. 1600 for NGN">
+                </div>
+                <div>
+                  <label class="form-label">GBP → Base</label>
+                  <input id="rateGBP" type="number" step="0.0001" class="form-control rate-input">
+                </div>
+                <div>
+                  <label class="form-label">EUR → Base</label>
+                  <input id="rateEUR" type="number" step="0.0001" class="form-control rate-input">
+                </div>
+                <button class="btn btn-primary" id="saveRatesBtn">Save Rates</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Data</h5>
+              <button class="btn btn-outline-secondary me-2" id="backupBtn"><i
+                  class="bi bi-box-arrow-down me-1"></i>Backup File</button>
+              <label class="btn btn-outline-secondary">
+                <i class="bi bi-box-arrow-in-up me-1"></i>Restore File<input type="file" id="restoreFile" class="d-none"
+                  accept="application/json">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal fade" id="txModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <form class="modal-content" id="txForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Transaction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-sm-4"><label class="form-label">Date</label><input type="date" class="form-control"
+                id="txDate" required></div>
+            <div class="col-sm-8"><label class="form-label">Description</label><input type="text" class="form-control"
+                id="txDesc" placeholder="e.g. Groceries at Shoprite" required></div>
+            <div class="col-sm-4"><label class="form-label">Type</label>
+              <select class="form-select" id="txType" required>
+                <option>expense</option>
+                <option>income</option>
+                <option>transfer</option>
+              </select>
+            </div>
+            <div class="col-sm-4"><label class="form-label">Amount</label><input type="number" step="0.01"
+                class="form-control" id="txAmount" required></div>
+            <div class="col-sm-4"><label class="form-label">Currency</label>
+              <select class="form-select" id="txCurrency" required>
+                <option>NGN</option>
+                <option>USD</option>
+                <option>GBP</option>
+                <option>EUR</option>
+              </select>
+            </div>
+            <div class="col-sm-4"><label class="form-label">Category</label>
+              <select class="form-select" id="txCategory" required></select>
+            </div>
+            <div class="col-sm-4"><label class="form-label">Wallet</label>
+              <select class="form-select" id="txWallet" required></select>
+            </div>
+            <div class="col-sm-4"><label class="form-label">Tags (comma)</label><input type="text" class="form-control"
+                id="txTags"></div>
+            <div class="col-12">
+              <label class="form-label">Attach Receipt (optional)</label>
+              <input type="file" class="form-control" id="txReceipt" accept="image/*,.pdf">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="walletModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" id="walletForm">
+        <div class="modal-header">
+          <h5 class="modal-title">New Wallet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="vstack gap-3">
+            <div>
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" id="wName" placeholder="e.g. Personal, Family, Business">
+            </div>
+            <div>
+              <label class="form-label">Type</label>
+              <select id="wType" class="form-select">
+                <option value="personal">Personal</option>
+                <option value="shared">Shared (Couples/Family)</option>
+                <option value="business">Business</option>
+                <option value="travel">Travel</option>
+                <option value="flexfx">Flex FX</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Currency</label>
+              <select id="wCurrency" class="form-select">
+                <option>NGN</option>
+                <option>USD</option>
+                <option>GBP</option>
+                <option>EUR</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Members (for Shared)</label>
+              <input type="text" class="form-control" id="wMembers" placeholder="emails separated by comma">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="tripModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form class="modal-content" id="tripForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Trip</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body vstack gap-3">
+          <div><label class="form-label">Destination</label><input class="form-control" id="tripDest" required></div>
+          <div class="row g-2">
+            <div class="col"><label class="form-label">Start</label><input type="date" class="form-control"
+                id="tripStart" required></div>
+            <div class="col"><label class="form-label">End</label><input type="date" class="form-control" id="tripEnd"
+                required></div>
+          </div>
+          <div><label class="form-label">Budget (base)</label><input type="number" step="0.01" class="form-control"
+              id="tripBudget" required></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal fade" id="bankModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Connect a Bank </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Real bank connections require a backend and a provider like <b>Plaid</b>,
+            <b>Mono</b> or <b>Okra</b>. For this demo, upload a CSV exported from your bank to import transactions
+            automatically.
+          </p>
+          <div class="mb-2">
+            <label class="form-label">CSV Format</label>
+            <div class="small">date,description,amount,currency,wallet,category,type</div>
+          </div>
+          <input type="file" class="form-control" id="bankCsv" accept=".csv">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="py-4 text-center text-muted small"></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    // Check authentication
+    if (localStorage.getItem('flextrack_logged_in') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    // --- Simple state & storage ---
+    const LS_KEY = 'flextrack_v1';
+    let state = JSON.parse(localStorage.getItem(LS_KEY) || 'null') || getSeedState();
+
+    function persist() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+    function uid() { return Math.random().toString(36).slice(2, 10); }
+
+    function getSeedState() {
+      const today = new Date();
+      const ym = today.toISOString().slice(0, 7);
+      return {
+        baseCurrency: 'NGN',
+        rates: { USD: 1600, GBP: 2000, EUR: 1700 }, // example NGN rates — edit in Settings
+        categories: ['Groceries', 'Transport', 'Dining', 'Rent', 'Utilities', 'Health', 'Entertainment', 'Salary', 'Business', 'Travel', 'Transfers'],
+        wallets: [
+          { id: uid(), name: 'Personal', type: 'personal', currency: 'NGN', members: [], balance: 0 },
+          { id: uid(), name: 'Family (Shared)', type: 'shared', currency: 'NGN', members: ['you@example.com', 'partner@example.com'], balance: 0 },
+          { id: uid(), name: 'Business', type: 'business', currency: 'NGN', members: [], balance: 0 },
+          { id: uid(), name: 'Flex FX', type: 'flexfx', currency: 'USD', members: [], balance: 0 },
+        ],
+        trips: [],
+        pocketguard: { income: 0, savings: 0, bills: 0, subs: 0, goals: 0, planned: 0 },
+        transactions: [
+          // seed examples
+          { id: uid(), date: ym + '-03', desc: 'Salary', amount: 750000, currency: 'NGN', type: 'income', category: 'Salary', walletName: 'Personal', tags: [], receipt: null },
+          { id: uid(), date: ym + '-05', desc: 'Rent', amount: -300000, currency: 'NGN', type: 'expense', category: 'Rent', walletName: 'Personal', tags: ['apartment'], receipt: null },
+          { id: uid(), date: ym + '-07', desc: 'Groceries', amount: -58000, currency: 'NGN', type: 'expense', category: 'Groceries', walletName: 'Family (Shared)', tags: ['food'], receipt: null },
+          { id: uid(), date: ym + '-10', desc: 'Client Reimbursable Taxi', amount: -15000, currency: 'NGN', type: 'expense', category: 'Business', walletName: 'Business', tags: ['client:Acme', 'project:Website'], receipt: null },
+          { id: uid(), date: ym + '-12', desc: 'USD Top‑up', amount: 200, currency: 'USD', type: 'transfer', category: 'Transfers', walletName: 'Flex FX', tags: ['fx'], receipt: null },
+        ]
+      }
+    }
+
+    // --- Theme management ---
+    function applyTheme(isDark) {
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      document.getElementById('darkModeToggle').checked = isDark;
+
+      // Update Chart.js colors if charts exist
+      if (window.catPie) {
+        window.catPie.destroy();
+        window.catPie = null;
+      }
+      if (window.trendLine) {
+        window.trendLine.destroy();
+        window.trendLine = null;
+      }
+
+      // Re-render dashboard to update charts with new theme
+      if (!document.getElementById('section-dashboard').classList.contains('d-none')) {
+        renderDashboard();
+      }
+    }
+
+    // --- Currency helpers ---
+    function fxToBase(amount, currency) {
+      const base = state.baseCurrency;
+      if (currency === base) return amount;
+      const r = state.rates[currency];
+      if (!r) return amount; // fallback
+      return amount * r;
+    }
+
+    function fmt(amount, currency) {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || state.baseCurrency, currencyDisplay: 'narrowSymbol' }).format(amount);
+    }
+
+    function fmtBase(amount) {
+      return fmt(amount, state.baseCurrency);
+    }
+
+    // --- Navigation ---
+    const sections = document.querySelectorAll('.section');
+    const navLinks = document.querySelectorAll('[data-section]');
+    navLinks.forEach(a => a.addEventListener('click', e => {
+      e.preventDefault();
+      const id = 'section-' + a.dataset.section;
+      sections.forEach(s => s.classList.toggle('d-none', s.id !== id));
+      navLinks.forEach(n => n.classList.toggle('active', n === a));
+    }));
+
+    // --- Populate selects ---
+    function refreshCategorySelect() {
+      const sel = document.getElementById('txCategory');
+      sel.innerHTML = state.categories.map(c => `<option>${c}</option>`).join('');
+    }
+    function refreshWalletSelects() {
+      const txSel = document.getElementById('txWallet');
+      const filterSel = document.getElementById('txWalletFilter');
+      const options = ['<option value="">All</option>'].concat(state.wallets.map(w => `<option>${w.name}</option>`));
+      txSel.innerHTML = state.wallets.map(w => `<option>${w.name}</option>`).join('');
+      filterSel.innerHTML = options.join('');
+    }
+
+    // --- Transactions table ---
+    function renderTxTable() {
+      const tbody = document.querySelector('#txTable tbody');
+      const q = (document.getElementById('txSearch').value || '').toLowerCase();
+      const fType = document.getElementById('txTypeFilter').value;
+      const fWallet = document.getElementById('txWalletFilter').value;
+
+      let rows = state.transactions.slice().sort((a, b) => b.date.localeCompare(a.date));
+      if (q) { rows = rows.filter(t => (t.desc + t.category + (t.tags || []).join(' ')).toLowerCase().includes(q)); }
+      if (fType) { rows = rows.filter(t => t.type === fType); }
+      if (fWallet) { rows = rows.filter(t => t.walletName === fWallet); }
+
+      tbody.innerHTML = rows.map(t => {
+        const chipClass = t.type === 'income' ? 'income' : t.type === 'transfer' ? 'transfer' : 'expense';
+        const amt = t.amount;
+        const sign = amt >= 0 ? '' : '-';
+        const pretty = fmt(Math.abs(amt), t.currency);
+        return `<tr>
+      <td>${t.date}</td>
+      <td><div class="fw-semibold">${t.desc}</div><div class="small text-muted">${(t.tags || []).join(', ')}</div></td>
+      <td><span class="chip ${chipClass}">${t.category || ''}</span></td>
+      <td><span class="wallet-pill">${t.walletName}</span></td>
+      <td class="text-end">${sign}${pretty}</td>
+      <td class="text-end">
+        ${t.receipt ? `<button class='btn btn-sm btn-outline-secondary me-1' data-view-receipt='${t.id}'><i class="bi bi-receipt"></i></button>` : ''}
+        <button class='btn btn-sm btn-outline-danger' data-del='${t.id}'><i class="bi bi-trash3"></i></button>
+      </td>
+    </tr>`
+      }).join('');
+      document.getElementById('txCount').textContent = `${rows.length} transaction${rows.length === 1 ? '' : 's'}`;
+    }
+
+    // --- Dashboard cards & charts ---
+    let catPie, trendLine;
+    function renderDashboard() {
+      document.getElementById('baseCurrencyLabel').textContent = state.baseCurrency;
+      const month = new Date().toISOString().slice(0, 7);
+      document.getElementById('chartMonthLabel').textContent = month;
+
+      // Net worth = sum of wallet balances + net transactions (converted)
+      const net = state.transactions.reduce((sum, t) => {
+        return sum + fxToBase(t.amount, t.currency);
+      }, 0);
+      document.getElementById('netWorth').textContent = fmtBase(net);
+
+      // Month income/expenses
+      const monthTx = state.transactions.filter(t => t.date.startsWith(month));
+      const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + fxToBase(t.amount, t.currency), 0);
+      const expenses = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + Math.abs(fxToBase(t.amount, t.currency)), 0);
+      const savings = Math.max(0, income - expenses);
+      document.getElementById('mIncome').textContent = fmtBase(income);
+      document.getElementById('mExpenses').textContent = fmtBase(expenses);
+      document.getElementById('mSavings').textContent = fmtBase(savings);
+
+      // PocketGuard
+      const pg = state.pocketguard;
+      const inPocket = (pg.income || 0) - ((pg.savings || 0) + (pg.bills || 0) + (pg.subs || 0) + (pg.goals || 0) + (pg.planned || 0));
+      document.getElementById('inMyPocket').textContent = fmtBase(inPocket);
+
+      // Charts
+      const catTotals = {};
+      monthTx.filter(t => t.type === 'expense').forEach(t => {
+        catTotals[t.category] = (catTotals[t.category] || 0) + Math.abs(fxToBase(t.amount, t.currency));
+      });
+      const catLabels = Object.keys(catTotals);
+      const catData = Object.values(catTotals);
+
+      const ctx1 = document.getElementById('catPie');
+      if (catPie) catPie.destroy();
+      catPie = new Chart(ctx1, { type: 'pie', data: { labels: catLabels, datasets: [{ data: catData }] }, options: { plugins: { legend: { position: 'bottom' } } } });
+
+      // Cashflow trend (last 6 months)
+      const months = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(d.toISOString().slice(0, 7));
+      }
+      const incomeSeries = months.map(m => state.transactions.filter(t => t.date.startsWith(m) && t.type === 'income').reduce((s, t) => s + fxToBase(t.amount, t.currency), 0));
+      const expenseSeries = months.map(m => state.transactions.filter(t => t.date.startsWith(m) && t.type === 'expense').reduce((s, t) => s + Math.abs(fxToBase(t.amount, t.currency)), 0));
+      const ctx2 = document.getElementById('trendLine');
+      if (trendLine) trendLine.destroy();
+      trendLine = new Chart(ctx2, { type: 'line', data: { labels: months, datasets: [{ label: 'Income', data: incomeSeries }, { label: 'Expenses', data: expenseSeries }] }, options: { plugins: { legend: { position: 'bottom' } }, tension: .3 } });
+    }
+
+    // --- Wallets UI ---
+    function renderWallets() {
+      const grid = document.getElementById('walletsGrid');
+      grid.innerHTML = state.wallets.map(w => {
+        const txInWallet = state.transactions.filter(t => t.walletName === w.name);
+        const balBase = txInWallet.reduce((s, t) => s + fxToBase(t.amount, t.currency), 0);
+        const members = (w.members || []).map(m => `<span class='avatar me-1'><i class='bi bi-person'></i></span>`).join('');
+        const badge = w.type === 'shared' ? `<span class='chip'><i class='bi bi-people me-1'></i>Shared</span>` :
+          w.type === 'business' ? `<span class='chip'><i class='bi bi-briefcase me-1'></i>Business</span>` :
+            w.type === 'travel' ? `<span class='chip'><i class='bi bi-airplane me-1'></i>Travel</span>` :
+              w.type === 'flexfx' ? `<span class='chip'><i class='bi bi-currency-exchange me-1'></i>Flex FX</span>` : `<span class='chip'><i class='bi bi-person me-1'></i>Personal</span>`;
+        return `<div class='col-md-6 col-xl-4'>
+      <div class='card h-100'>
+        <div class='card-body'>
+          <div class='d-flex justify-content-between align-items-center'>
+            <h5 class='card-title m-0'>${w.name}</h5>
+            ${badge}
+          </div>
+          <div class='text-muted small mb-2'>Currency: ${w.currency}</div>
+          <div class='display-6 fw-bold mb-2'>${fmtBase(balBase)}</div>
+          <div class='d-flex align-items-center gap-2'>${w.type === 'shared' ? members : ''}</div>
+        </div>
+      </div>
+    </div>`;
+      }).join('');
+    }
+
+    // --- Travel ---
+    function renderTrips() {
+      const box = document.getElementById('tripList');
+      box.innerHTML = state.trips.map(tr => {
+        const spent = state.transactions.filter(t => t.tags?.includes('trip:' + tr.id)).reduce((s, t) => s + Math.abs(fxToBase(t.amount, t.currency)), 0);
+        const pct = Math.min(100, Math.round((spent / (tr.budget || 1)) * 100));
+        return `<div class='border rounded p-3'>
+      <div class='d-flex justify-content-between'><div>
+        <div class='fw-bold'>${tr.dest}</div>
+        <div class='text-muted small'>${tr.start} → ${tr.end}</div>
+      </div>
+      <div class='text-end'>
+        <div class='fw-semibold'>Budget: ${fmtBase(tr.budget)}</div>
+        <div class='small text-muted'>Spent: ${fmtBase(spent)}</div>
+      </div></div>
+      <div class='progress mt-2' role='progressbar' aria-valuenow='${pct}' aria-valuemin='0' aria-valuemax='100'>
+        <div class='progress-bar' style='width:${pct}%;'>${pct}%</div>
+      </div>
+    </div>`;
+      }).join('') || '<div class="text-muted">No trips yet.</div>';
+
+      // FX balances
+      const fxBox = document.getElementById('fxBalances');
+      const fxTx = state.transactions.filter(t => ['USD', 'GBP', 'EUR'].includes(t.currency));
+      const totals = { USD: 0, GBP: 0, EUR: 0 };
+      fxTx.forEach(t => totals[t.currency] += t.amount);
+      fxBox.innerHTML = ['USD', 'GBP', 'EUR'].map(c => `<div class='d-flex justify-content-between'><div>${c}</div><div class='fw-bold'>${fmt(totals[c], c)}</div></div>`).join('');
+    }
+
+    // --- Business (Expensify‑like) ---
+    function renderBusiness() {
+      const tbody = document.querySelector('#bizTable tbody');
+      const bizTx = state.transactions.filter(t => (t.walletName || '').toLowerCase().includes('business'));
+      tbody.innerHTML = bizTx.map(t => `<tr><td>${t.date}</td><td>${t.desc}</td><td>${t.category}</td><td>${(t.tags || []).filter(x => x.startsWith('client:') || x.startsWith('project:')).join(' / ')}</td><td class='text-end'>${fmt(Math.abs(t.amount), t.currency)}</td></tr>`).join('');
+    }
+
+    // --- Forms & actions ---
+    // Add transaction
+    const txForm = document.getElementById('txForm');
+
+    txForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('txReceipt').files[0];
+      let receipt = null;
+      if (file) {
+        receipt = await fileToDataUrl(file);
+      }
+      const tx = {
+        id: uid(),
+        date: document.getElementById('txDate').value,
+        desc: document.getElementById('txDesc').value,
+        type: document.getElementById('txType').value,
+        amount: parseFloat(document.getElementById('txAmount').value) * (document.getElementById('txType').value === 'expense' ? -1 : 1),
+        currency: document.getElementById('txCurrency').value,
+        category: document.getElementById('txCategory').value,
+        walletName: document.getElementById('txWallet').value,
+        tags: (document.getElementById('txTags').value || '').split(',').map(s => s.trim()).filter(Boolean),
+        receipt
+      };
+      if (!tx.date || !tx.desc || !tx.category || !tx.walletName || !tx.currency || !isFinite(tx.amount)) return;
+      state.transactions.push(tx);
+      persist();
+      renderAll();
+      bootstrap.Modal.getInstance(document.getElementById('txModal')).hide();
+      txForm.reset();
+    });
+
+    function fileToDataUrl(file) {
+      return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
+    }
+
+    // Delete transaction & view receipt
+    document.getElementById('txTable').addEventListener('click', (e) => {
+      const delId = e.target.closest('button')?.dataset?.del;
+      const viewId = e.target.closest('button')?.dataset?.viewReceipt;
+      if (delId) {
+        state.transactions = state.transactions.filter(t => t.id !== delId);
+        persist(); renderAll();
+      }
+      if (viewId) {
+        const t = state.transactions.find(x => x.id === viewId);
+        if (t?.receipt) {
+          const w = window.open();
+          w.document.write(`<iframe src='${t.receipt}' style='width:100%;height:100%;border:0'></iframe>`);
+        }
+      }
+    });
+
+    // Export CSV
+    function exportCsv(rows, filename) {
+      const header = 'date,description,amount,currency,wallet,category,type,tags';
+      const csv = [header].concat(rows.map(t => [
+        t.date,
+        '"' + (t.desc || '').replace(/"/g, '""') + '"',
+        t.amount,
+        t.currency,
+        '"' + (t.walletName || '').replace(/"/g, '""') + '"',
+        '"' + (t.category || '').replace(/"/g, '""') + '"',
+        t.type,
+        '"' + (t.tags || []).join(';').replace(/"/g, '""') + '"',
+      ].join(','))).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+      a.click(); URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('exportCsvBtn').addEventListener('click', () => exportCsv(state.transactions, 'transactions.csv'));
+    document.getElementById('exportBusinessCsv').addEventListener('click', () => {
+      const biz = state.transactions.filter(t => (t.walletName || '').toLowerCase().includes('business'));
+      exportCsv(biz, 'business_report.csv')
+    });
+
+    // Clear all
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      if (confirm('Clear ALL transactions?')) { state.transactions = []; persist(); renderAll(); }
+    });
+
+    // Wallet form
+    const walletForm = document.getElementById('walletForm');
+    walletForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const w = { id: uid(), name: wName.value || 'Wallet', type: wType.value, currency: wCurrency.value, members: (wMembers.value || '').split(',').map(s => s.trim()).filter(Boolean) };
+      state.wallets.push(w); persist(); renderAll(); bootstrap.Modal.getInstance(document.getElementById('walletModal')).hide(); walletForm.reset();
+    });
+
+    // Trips
+    const tripForm = document.getElementById('tripForm');
+    tripForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const tr = { id: uid(), dest: tripDest.value, start: tripStart.value, end: tripEnd.value, budget: parseFloat(tripBudget.value) || 0 };
+      state.trips.push(tr); persist(); renderAll(); bootstrap.Modal.getInstance(document.getElementById('tripModal')).hide(); tripForm.reset();
+    });
+
+    // FX add
+    document.getElementById('fxAddForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const c = document.getElementById('fxCurrency').value;
+      const a = parseFloat(document.getElementById('fxAmount').value || '0');
+      if (!a) return;
+      state.transactions.push({ id: uid(), date: new Date().toISOString().slice(0, 10), desc: `FX Top‑up ${c}`, amount: a, currency: c, type: 'transfer', category: 'Transfers', walletName: 'Flex FX', tags: ['fx'], receipt: null });
+      persist(); renderAll(); e.target.reset();
+    });
+
+    // PocketGuard form
+    document.getElementById('pgForm').addEventListener('submit', e => {
+      e.preventDefault();
+      state.pocketguard = { income: +pgIncome.value || 0, savings: +pgSavings.value || 0, bills: +pgBills.value || 0, subs: +pgSubs.value || 0, goals: +pgGoals.value || 0, planned: +pgPlanned.value || 0 };
+      persist(); renderAll();
+    });
+
+    // Settings
+    document.getElementById('baseCurrency').addEventListener('change', e => { state.baseCurrency = e.target.value; persist(); renderAll(); });
+    document.getElementById('saveRatesBtn').addEventListener('click', () => {
+      state.rates = { USD: +rateUSD.value || state.rates.USD, GBP: +rateGBP.value || state.rates.GBP, EUR: +rateEUR.value || state.rates.EUR };
+      persist(); renderAll();
+    });
+
+    // Backup/Restore
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const a = Object.assign(document.createElement('a'), { href: url, download: 'flextrack_backup.json' }); a.click(); URL.revokeObjectURL(url);
+    });
+    document.getElementById('restoreFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const text = await file.text();
+      try { const data = JSON.parse(text); state = data; persist(); renderAll(); alert('Restore complete.'); }
+      catch (err) { alert('Invalid JSON'); }
+    });
+
+    // Bank connect (CSV import)
+    document.getElementById('connectBankBtn').addEventListener('click', () => new bootstrap.Modal('#bankModal').show());
+    document.getElementById('bankCsv').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const text = await file.text();
+      const rows = parseCSV(text);
+      const [header, ...rest] = rows;
+      const map = idxMap(header);
+      rest.forEach(r => {
+        if (!r.length) return;
+        const tx = {
+          id: uid(),
+          date: r[map.date] || new Date().toISOString().slice(0, 10),
+          desc: r[map.description] || 'Imported',
+          amount: parseFloat(r[map.amount] || '0'),
+          currency: r[map.currency] || state.baseCurrency,
+          walletName: r[map.wallet] || state.wallets[0]?.name,
+          category: r[map.category] || 'Transfers',
+          type: r[map.type] || (parseFloat(r[map.amount] || '0') >= 0 ? 'income' : 'expense'),
+          tags: [], receipt: null
+        };
+        state.transactions.push(tx);
+      });
+      persist(); renderAll(); bootstrap.Modal.getInstance(document.getElementById('bankModal')).hide(); e.target.value = '';
+    });
+
+    function idxMap(head) {
+      const lc = head.map(h => (h || '').toLowerCase().trim());
+      function find(k) { return lc.indexOf(k); }
+      return { date: find('date'), description: find('description'), amount: find('amount'), currency: find('currency'), wallet: find('wallet'), category: find('category'), type: find('type') };
+    }
+
+    function parseCSV(text) {
+      // Simple CSV parser supporting quotes
+      const rows = []; let row = []; let i = 0; let cur = ''; let inQ = false;
+      while (i < text.length) {
+        const ch = text[i]; if (inQ) { if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') { inQ = false; } else { cur += ch; } }
+        else { if (ch === '"') { inQ = true; } else if (ch === ',') { row.push(cur); cur = ''; } else if (ch === '\n' || ch === '\r') { if (cur !== '' || row.length) { row.push(cur); rows.push(row); row = []; cur = ''; } } else { cur += ch; } }
+        i++;
+      }
+      if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+      return rows.filter(r => r.length && r.some(x => x !== ''));
+    }
+
+    // Receipt preview (Business)
+    document.getElementById('receiptFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if (!file) { receiptPreview.textContent = 'No file selected.'; return; }
+      const url = await fileToDataUrl(file);
+      receiptPreview.innerHTML = `<div class='ratio ratio-4x3'><iframe src='${url}' class='rounded' style='border:0'></iframe></div>`;
+    });
+
+    // Log-out Functionality 
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      localStorage.removeItem('flextrack_logged_in');
+      window.location.href = 'login.html';
+    });
+
+    // Export TX visible in table
+
+    // Filters
+    ['txSearch', 'txTypeFilter', 'txWalletFilter'].forEach(id => document.getElementById(id).addEventListener('input', renderTxTable));
+
+    // Initial render
+    function renderAll() {
+      refreshCategorySelect();
+      refreshWalletSelects();
+      renderTxTable();
+      renderDashboard();
+      renderWallets();
+      renderTrips();
+      renderBusiness();
+      // Settings prefill
+      document.getElementById('baseCurrency').value = state.baseCurrency;
+      rateUSD.value = state.rates.USD || '';
+      rateGBP.value = state.rates.GBP || '';
+      rateEUR.value = state.rates.EUR || '';
+    }
+
+    renderAll();
+  </script>
+</body>
+
+</html>

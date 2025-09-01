@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlexTracker — Sign In</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --brand: #4f46e5;
+      --brand-2: #22c55e;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f0f4ff 0%, #f8f9fa 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="row g-0">
+      <div class="col-md-6 auth-left">
+        <div class="text-center mb-4">
+          <i class="bi bi-wallet2 display-1 opacity-75"></i>
+          <h1 class="fw-bold mt-3">Flex<b>Tracker</b></h1>
+          <p class="opacity-75">Smart expense tracking for everyone</p>
+        </div>
+        
+        <ul class="feature-list">
+          <li><i class="bi bi-graph-up"></i> Track spending across multiple categories</li>
+          <li><i class="bi bi-globe"></i> Multi-currency support with live exchange rates</li>
+          <li><i class="bi bi-piggy-bank"></i> Plan savings with PocketGuard feature</li>
+          <li><i class="bi bi-briefcase"></i> Business expense reporting</li>
+          <li><i class="bi bi-airplane"></i> Travel budgeting tools</li>
+        </ul>
+      </div>
+      
+      <div class="col-md-6 auth-right">
+        <!-- Login Form -->
+        <div id="loginForm">
+          <h2 class="fw-bold mb-1">Welcome back</h2>
+          <p class="text-muted mb-4">Sign in to access your expense tracker</p>
+          
+          <form id="loginFormElement">
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="loginEmail" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="loginPassword" class="form-label">Password</label>
+              <input type="password" class="form-control" id="loginPassword" required>
+              <div class="form-text text-end">
+                <a href="#forgot" class="text-decoration-none" id="forgotPasswordLink">Forgot password?</a>
+              </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="rememberMe">
+              <label class="form-check-label" for="rememberMe">Remember me</label>
+            </div>
+            
+            <button type="submit" class="btn btn-brand w-100 py-2 mb-3">Sign In</button>
+            
+            <div class="text-center mb-3">
+              <span class="text-muted">Or continue with</span>
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-outline-secondary">
+                <i class="bi bi-google me-2"></i> Google
+              </button>
+            </div>
+          </form>
+          
+          <div class="auth-switch">
+            <p class="mb-0">Don't have an account? <a href="#" class="text-decoration-none fw-bold" id="showSignup">Sign up</a></p>
+          </div>
+        </div>
+        
+        <!-- Signup Form -->
+        <div id="signupForm" style="display: none;">
+          <h2 class="fw-bold mb-1">Create account</h2>
+          <p class="text-muted mb-4">Start tracking your expenses today</p>
+          
+          <form id="signupFormElement">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="signupFirstName" class="form-label">First name</label>
+                <input type="text" class="form-control" id="signupFirstName" required>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label for="signupLastName" class="form-label">Last name</label>
+                <input type="text" class="form-control" id="signupLastName" required>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="signupEmail" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="signupEmail" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="signupPassword" class="form-label">Password</label>
+              <input type="password" class="form-control" id="signupPassword" required>
+              <div class="form-text">At least 8 characters with a number and symbol</div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="signupConfirmPassword" class="form-label">Confirm password</label>
+              <input type="password" class="form-control" id="signupConfirmPassword" required>
+            </div>
+            
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="termsAgree" required>
+              <label class="form-check-label" for="termsAgree">I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> and <a href="#" class="text-decoration-none">Privacy Policy</a></label>
+            </div>
+            
+            <button type="submit" class="btn btn-brand w-100 py-2 mb-3">Create Account</button>
+            
+            <div class="text-center mb-3">
+              <span class="text-muted">Or continue with</span>
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-outline-secondary">
+                <i class="bi bi-google me-2"></i> Google
+              </button>
+            </div>
+          </form>
+          
+          <div class="auth-switch">
+            <p class="mb-0">Already have an account? <a href="#" class="text-decoration-none fw-bold" id="showLogin">Sign in</a></p>
+          </div>
+        </div>
+        
+        <!-- Forgot Password Form -->
+        <div id="forgotPasswordForm" style="display: none;">
+          <h2 class="fw-bold mb-1">Reset password</h2>
+          <p class="text-muted mb-4">Enter your email to receive a reset link</p>
+          
+          <form id="forgotPasswordFormElement">
+            <div class="mb-4">
+              <label for="forgotEmail" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="forgotEmail" required>
+              <div class="form-text">We'll send you a link to reset your password</div>
+            </div>
+            
+            <button type="submit" class="btn btn-brand w-100 py-2 mb-3">Send Reset Link</button>
+          </form>
+          
+          <div class="auth-switch">
+            <p class="mb-0"><a href="#" class="text-decoration-none fw-bold" id="backToLogin">Back to sign in</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Form toggling functionality
+    document.getElementById('showSignup').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'block';
+      document.getElementById('forgotPasswordForm').style.display = 'none';
+    });
+    
+    document.getElementById('showLogin').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('forgotPasswordForm').style.display = 'none';
+    });
+    
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('forgotPasswordForm').style.display = 'block';
+    });
+    
+    document.getElementById('backToLogin').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('forgotPasswordForm').style.display = 'none';
+    });
+    
+    // Form validation and submission
+    document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      // In a real app, you would validate credentials against a backend
+      console.log('Login attempt:', email, password);
+      
+      // For demo purposes, we'll simulate a successful login
+      simulateLogin();
+    });
+    
+    document.getElementById('signupFormElement').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const firstName = document.getElementById('signupFirstName').value;
+      const lastName = document.getElementById('signupLastName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('signupConfirmPassword').value;
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+      
+      // In a real app, you would send this data to a backend
+      console.log('Signup attempt:', firstName, lastName, email, password);
+      
+      // For demo purposes, we'll simulate a successful signup and login
+      simulateLogin();
+    });
+    
+    document.getElementById('forgotPasswordFormElement').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgotEmail').value;
+      
+      // In a real app, you would send a password reset email
+      console.log('Password reset requested for:', email);
+      
+      alert('If an account exists with this email, you will receive a password reset link shortly.');
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('forgotPasswordForm').style.display = 'none';
+    });
+    
+    // Simulate successful login and redirect to main app
+    function simulateLogin() {
+      // Show a loading state
+      const buttons = document.querySelectorAll('button[type="submit"]');
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+      });
+      
+      // Simulate API call delay
+      setTimeout(() => {
+        // Store a simple flag to indicate the user is logged in
+        localStorage.setItem('flextrack_logged_in', 'true');
+        
+        // Redirect to the main app (which would be in a separate file in a real app)
+        // For this demo, we'll reload the page which will show the main app
+        window.location.href = 'index.html'; // In a real app, this would redirect to your main app page
+      }, 1500);
+    }
+    
+    // Check if user is already logged in (for demo purposes)
+    if (localStorage.getItem('flextrack_logged_in') === 'true') {
+      // If already logged in, redirect to main app
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
